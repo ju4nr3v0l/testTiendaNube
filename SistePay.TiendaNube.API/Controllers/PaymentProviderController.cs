@@ -37,4 +37,31 @@ public class PaymentProviderController : ControllerBase
 
         return Ok(result);
     }
+
+    [HttpPut("{providerId}")]
+    public async Task<IActionResult> UpdatePaymentProvider(string providerId, [FromBody] UpdateProviderDto dto)
+    {
+        var result = await _tiendaNubeService.UpdatePaymentProviderAsync(providerId, dto.CheckoutJsUrl);
+        
+        if (result == null)
+            return BadRequest("Error actualizando payment provider");
+
+        return Ok(result);
+    }
+
+    [HttpDelete("{providerId}")]
+    public async Task<IActionResult> DeletePaymentProvider(string providerId)
+    {
+        var result = await _tiendaNubeService.DeletePaymentProviderAsync(providerId);
+        
+        if (!result)
+            return BadRequest("Error eliminando payment provider");
+
+        return Ok(new { message = "Payment provider eliminado" });
+    }
+}
+
+public class UpdateProviderDto
+{
+    public string CheckoutJsUrl { get; set; } = string.Empty;
 }

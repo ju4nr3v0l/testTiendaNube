@@ -136,8 +136,8 @@ public class TiendaNubeService
             ["description"] = "Medio de pago SistePay",
             ["logo_urls"] = new Dictionary<string, string>
             {
-                ["400x120"] = "https://via.placeholder.com/400x120",
-                ["160x100"] = "https://via.placeholder.com/160x100"
+                ["400x120"] = "https://www.sistecredito.com/wp-content/themes/sistecredito/assets/img/logo.svg",
+                ["160x100"] = "https://www.sistecredito.com/wp-content/themes/sistecredito/assets/img/logo.svg"
             },
             ["configuration_url"] = "http://localhost:4200/payments",
             ["supported_currencies"] = new[] { "COP", "USD" },
@@ -159,7 +159,7 @@ public class TiendaNubeService
                     ["supported_payment_method_types"] = new[] { "credit_card" }
                 }
             },
-            ["checkout_js_url"] = "https://cdn.jsdelivr.net/gh/sistepay/checkout@main/checkout.js",
+            ["checkout_js_url"] = $"https://3354daf8bf33.ngrok-free.app/checkout.js?v={DateTime.Now.Ticks}",
             ["enabled"] = true
         };
 
@@ -195,5 +195,92 @@ public class TiendaNubeService
         }
 
         return null;
+    }
+
+    public async Task<string?> CreateTransactionAsync(string orderId, decimal amount)
+    {
+        if (string.IsNullOrEmpty(_accessToken))
+            return null;
+
+        var client = _httpClientFactory.CreateClient("TiendaNube");
+        client.DefaultRequestHeaders.Add("Authentication", $"bearer {_accessToken}");
+
+        var storeId = _configuration["TiendaNube:StoreId"];
+        
+        var transactionId = "SISTEPAY_" + Guid.NewGuid().ToString("N").Substring(0, 16).ToUpper();
+        
+        var transaction = new
+        {
+            order_id = orderId,
+            amount = amount.ToString("F2"),
+            currency = "COP",
+            gateway = "sistepay",
+            gateway_id = transactionId,
+            status = "success",
+            payment_method_id = "credit_card"
+        };
+
+        var content = new StringContent(JsonSerializer.Serialize(transaction), Encoding.UTF8, "application/json");
+        var response = await client.PostAsync($"https://api.tiendanube.com/v1/{storeId}/orders/{orderId}/transactions", content);
+
+        if (response.IsSuccessStatusCode)
+        {
+            _logger.LogInformation("Transacción creada exitosamente: {TransactionId}", transactionId);
+            return transactionId;
+        }
+
+        var errorContent = await response.Content.ReadAsStringAsync();
+        _logger.LogError("Error creando transacción: {StatusCode} - {Content}", response.StatusCode, errorContent);
+        return null;
+    }
+
+    public async Task<object?> UpdatePaymentProviderAsync(string providerId, string checkoutJsUrl)
+    {
+        if (string.IsNullOrEmpty(_accessToken))
+            return null;
+
+        var client = _httpClientFactory.CreateClient("TiendaNube");
+        client.DefaultRequestHeaders.Add("Authentication", $"bearer {_accessToken}");
+
+        var storeId = _configuration["TiendaNube:StoreId"];
+        
+        var paymentProvider = new Dictionary<string, object>
+        {
+            ["checkout_js_url"] = checkoutJsUrl
+        };
+
+        var content = new StringContent(JsonSerializer.Serialize(paymentProvider), Encoding.UTF8, "application/json");
+        var response = await client.PutAsync($"https://api.tiendanube.com/v1/{storeId}/payment_providers/{providerId}", content);
+
+        if (response.IsSuccessStatusCode)
+        {
+            var jsonResponse = await response.Content.ReadAsStringAsync();
+            return JsonSerializer.Deserialize<object>(jsonResponse);
+        }
+
+        _logger.LogError("Error actualizando payment provider: {StatusCode} - {Content}", 
+            response.StatusCode, await response.Content.ReadAsStringAsync());
+        return null;
+    }
+
+    public async Task<bool> DeletePaymentProviderAsync(string providerId)
+    {
+        if (string.IsNullOrEmpty(_accessToken))
+            return false;
+
+        var client = _httpClientFactory.CreateClient("TiendaNube");
+        client.DefaultRequestHeaders.Add("Authentication", $"bearer {_accessToken}");
+
+        var storeId = _configuration["TiendaNube:StoreId"];
+        var response = await client.DeleteAsync($"https://api.tiendanube.com/v1/{storeId}/payment_providers/{providerId}");
+
+        if (response.IsSuccessStatusCode)
+        {
+            _logger.LogInformation("Payment Provider eliminado: {ProviderId}", providerId);
+            return true;
+        }
+
+        _logger.LogError("Error eliminando payment provider: {StatusCode}", response.StatusCode);
+        return false;
     }
 }

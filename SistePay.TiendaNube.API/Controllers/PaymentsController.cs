@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using SistePay.TiendaNube.API.Dtos;
+using SistePay.TiendaNube.API.Services;
 
 namespace SistePay.TiendaNube.API.Controllers;
 
@@ -8,20 +9,30 @@ namespace SistePay.TiendaNube.API.Controllers;
 public class PaymentsController : ControllerBase
 {
     private readonly ILogger<PaymentsController> _logger;
+    private readonly TiendaNubeService _tiendaNubeService;
 
-    public PaymentsController(ILogger<PaymentsController> logger)
+    public PaymentsController(ILogger<PaymentsController> logger, TiendaNubeService tiendaNubeService)
     {
         _logger = logger;
+        _tiendaNubeService = tiendaNubeService;
     }
 
     [HttpPost]
-    public IActionResult CreatePayment([FromBody] PaymentRequestDto request)
+    public async Task<IActionResult> CreatePayment([FromBody] PaymentRequestDto request)
     {
-        _logger.LogInformation("Creando pago: {Amount} - {Description}", request.Amount, request.Description);
+        _logger.LogInformation("Procesando pago: Order {OrderId} - Amount {Amount}", request.OrderId, request.Amount);
 
-        var paymentId = Guid.NewGuid().ToString();
-        var paymentUrl = $"https://checkout.sistepay.com/payment/{paymentId}";
+        // Crear transacción en Tienda Nube
+        var transaction = await _tiendaNubeService.CreateTransactionAsync(request.OrderId, request.Amount);
 
-        return Ok(new { paymentUrl, paymentId });
+        if (transaction == null)
+        {
+            return BadRequest("Error creando transacción");
+        }
+
+        return Ok(new { 
+            transactionId = transaction,
+            status = "approved"
+        });
     }
 }
