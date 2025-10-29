@@ -10,12 +10,43 @@ public class TiendaNubeService
     private readonly IConfiguration _configuration;
     private readonly ILogger<TiendaNubeService> _logger;
     private static string? _accessToken;
+    private const string TokenFilePath = "/app/token.txt";
 
     public TiendaNubeService(IHttpClientFactory httpClientFactory, IConfiguration configuration, ILogger<TiendaNubeService> logger)
     {
         _httpClientFactory = httpClientFactory;
         _configuration = configuration;
         _logger = logger;
+        LoadTokenFromFile();
+    }
+
+    private void LoadTokenFromFile()
+    {
+        try
+        {
+            if (File.Exists(TokenFilePath))
+            {
+                _accessToken = File.ReadAllText(TokenFilePath);
+                _logger.LogInformation("Token cargado desde archivo");
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error cargando token desde archivo");
+        }
+    }
+
+    private void SaveTokenToFile(string token)
+    {
+        try
+        {
+            File.WriteAllText(TokenFilePath, token);
+            _logger.LogInformation("Token guardado en archivo");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error guardando token en archivo");
+        }
     }
 
     public async Task<TokenResponse?> GetAccessTokenAsync(string code)
@@ -37,7 +68,11 @@ public class TiendaNubeService
         {
             var jsonResponse = await response.Content.ReadAsStringAsync();
             var tokenResponse = JsonSerializer.Deserialize<TokenResponse>(jsonResponse);
-            _accessToken = tokenResponse?.access_token;
+            if (tokenResponse != null && !string.IsNullOrEmpty(tokenResponse.access_token))
+            {
+                _accessToken = tokenResponse.access_token;
+                SaveTokenToFile(_accessToken);
+            }
             return tokenResponse;
         }
 
@@ -95,15 +130,37 @@ public class TiendaNubeService
 
         var storeId = _configuration["TiendaNube:StoreId"];
         
-        var paymentProvider = new
+        var paymentProvider = new Dictionary<string, object>
         {
-            name = "SistePay",
-            description = "Medio de pago SistePay",
-            logo_urls = new { },
-            configuration_url = "http://localhost:4200/payments",
-            supported_currencies = new[] { "COP", "USD" },
-            checkout_payment_options = new[] { "credit_card", "debit_card" },
-            enabled = true
+            ["name"] = "SistePay",
+            ["description"] = "Medio de pago SistePay",
+            ["logo_urls"] = new Dictionary<string, string>
+            {
+                ["400x120"] = "https://via.placeholder.com/400x120",
+                ["160x100"] = "https://via.placeholder.com/160x100"
+            },
+            ["configuration_url"] = "http://localhost:4200/payments",
+            ["supported_currencies"] = new[] { "COP", "USD" },
+            ["supported_payment_methods"] = new[]
+            {
+                new Dictionary<string, object>
+                {
+                    ["payment_method_type"] = "credit_card",
+                    ["payment_methods"] = new[] { "visa", "mastercard", "amex" }
+                }
+            },
+            ["checkout_payment_options"] = new[]
+            {
+                new Dictionary<string, object>
+                {
+                    ["id"] = "credit_card",
+                    ["name"] = "Tarjeta de Crédito",
+                    ["supported_billing_countries"] = new[] { "CO", "US" },
+                    ["supported_payment_method_types"] = new[] { "credit_card" }
+                }
+            },
+            ["checkout_js_url"] = "https://cdn.jsdelivr.net/gh/sistepay/checkout@main/checkout.js",
+            ["enabled"] = true
         };
 
         var content = new StringContent(JsonSerializer.Serialize(paymentProvider), Encoding.UTF8, "application/json");
