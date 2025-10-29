@@ -1,0 +1,85 @@
+Crea un proyecto full-stack llamado "SistePayTiendaNube" con las siguientes especificaciones técnicas:
+
+FRONTEND:
+- Framework: Angular 17.
+- Nombre del módulo principal: `sistepay-app`.
+- Diseño simple basado en Material Design (sin dependencias adicionales no oficiales).
+- Crear los componentes:
+  1. `auth-callback`: recibe el `code` de OAuth desde Tienda Nube y llama al backend para obtener el access_token.
+  2. `dashboard`: muestra información básica de la tienda (nombre, email, cantidad de pedidos).
+  3. `payments`: permite crear una orden de pago y redirigir al checkout propio.
+- Configurar rutas:
+  `/auth/callback`, `/dashboard`, `/payments`.
+- Configurar un servicio Angular (`api.service.ts`) para consumir el backend en `http://localhost:5000/api/...`.
+- Debe incluir un archivo `environment.ts` con variables:
+  ```typescript
+  export const environment = {
+    apiUrl: 'http://localhost:5000/api',
+    clientId: 'REEMPLAZAR_CLIENT_ID_TIENDA_NUBE',
+    redirectUri: 'http://localhost:4200/auth/callback'
+  };
+Usar interceptores HTTP para incluir encabezado User-Agent: SistePayApp (sistecredito.com/contacto) en todas las peticiones.
+
+Configurar CORS para permitir peticiones al backend.
+
+BACKEND:
+
+Lenguaje: C# (.NET 8)
+
+Proyecto tipo Web API llamado SistePay.TiendaNube.API.
+
+Estructura con Clean Architecture mínima: Controllers, Services, Models, Dtos.
+
+Controladores:
+
+AuthController: maneja OAuth2 con Tienda Nube (/api/auth/callback, /api/auth/token).
+
+OrdersController: obtiene órdenes de Tienda Nube usando el access_token.
+
+PaymentsController: recibe pagos creados desde el frontend y simula un checkout.
+
+Integrar el flujo OAuth2 de Tienda Nube:
+
+Endpoint de autorización: https://www.tiendanube.com/apps/authorize.
+
+Token: https://api.tiendanube.com/v1/oauth/token.
+
+Guardar el access_token en memoria (o usar Redis si se desea extender).
+
+Incluir HttpClientFactory para las peticiones a Tienda Nube con el encabezado:
+User-Agent: SistePayApp (sistecredito.com/contacto)
+
+Implementar control de errores, logs básicos con ILogger, y política CORS para http://localhost:4200.
+
+Exponer endpoints:
+
+GET /api/orders → lista pedidos desde Tienda Nube.
+
+POST /api/payments → crea un pago simulado y devuelve URL de pago externa.
+
+GET /api/store/info → obtiene datos de la tienda autenticada.
+
+DOCKER:
+
+Generar un docker-compose.yml que levante ambos servicios:
+
+Frontend en puerto 4200
+
+Backend en puerto 5000
+
+Configurar red interna para comunicación
+
+ADICIONAL:
+
+Crear un README.md con instrucciones paso a paso para:
+
+Registrar la app en el portal de socios de Tienda Nube.
+
+Colocar el Client ID y Client Secret en el backend (appsettings.json).
+
+Ejecutar localmente y probar el flujo OAuth con una tienda demo.
+
+Agregar un webhook de ejemplo (/api/webhooks/orders) que capture orders/created.
+
+
+---

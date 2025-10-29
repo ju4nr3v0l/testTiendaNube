@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  frontend:
+    build:
+      context: ./sistepay-app
+      dockerfile: Dockerfile
+    ports:
+      - "4200:4200"
+    networks:
+      - sistepay-network
+    depends_on:
+      - backend
+
+  backend:
+    build:
+      context: ./SistePay.TiendaNube.API
+      dockerfile: Dockerfile
+    ports:
+      - "5001:5000"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:5000
+    networks:
+      - sistepay-network
+
+networks:
+  sistepay-network:
+    driver: bridge

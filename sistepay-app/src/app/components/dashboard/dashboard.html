@@ -1,0 +1,14 @@
+<div style="padding: 20px;">
+  <h1>Dashboard</h1>
+  
+  <div *ngIf="storeInfo" style="margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 4px;">
+    <h2>Información de la Tienda</h2>
+    <p><strong>Nombre:</strong> {{ storeInfo.name }}</p>
+    <p><strong>Email:</strong> {{ storeInfo.email }}</p>
+  </div>
+
+  <div style="margin: 20px 0;">
+    <h2>Pedidos</h2>
+    <p><strong>Cantidad de pedidos:</strong> {{ orders.length }}</p>
+  </div>
+</div>

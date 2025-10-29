@@ -1,0 +1,22 @@
+# Angular
+sistepay-app/node_modules/
+sistepay-app/dist/
+sistepay-app/.angular/
+
+# .NET
+SistePay.TiendaNube.API/bin/
+SistePay.TiendaNube.API/obj/
+SistePay.TiendaNube.API/appsettings.json
+
+# Environment files
+sistepay-app/src/environments/environment.ts
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db

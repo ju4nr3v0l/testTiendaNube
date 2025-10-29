@@ -1,0 +1,6 @@
+@SistePay.TiendaNube.API_HostAddress = http://localhost:5137
+
+GET {{SistePay.TiendaNube.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

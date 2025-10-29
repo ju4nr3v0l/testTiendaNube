@@ -1,0 +1,37 @@
+Para: partners@tiendanube.com
+Asunto: Solicitud de habilitación de APIs de pagos - App ID 22716
+
+---
+
+Hola equipo de Tiendanube,
+
+Solicito la habilitación de los permisos de APIs de pagos para mi aplicación:
+
+Información de la aplicación:
+- App ID: 22716
+- Nombre: SistePay
+- Categoría: Pagos
+- URL de redirección: http://localhost:4200/auth/callback
+
+Permisos solicitados:
+- read_payments
+- write_payments
+
+Descripción:
+SistePay es una aplicación de medio de pago que permitirá a las tiendas 
+procesar pagos de forma segura. La aplicación cuenta con:
+- Backend en .NET 8
+- Frontend en Angular 17
+- Integración OAuth2 completada
+- Infraestructura escalable
+
+Tipo de integración planeada:
+- Integración externa (redirección a página de pago)
+- Posteriormente: integración transparente
+
+Agradezco su pronta respuesta.
+
+Saludos,
+[Tu nombre]
+[Tu empresa]
+[Tu email de contacto]
